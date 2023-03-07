@@ -17,3 +17,5 @@ def cinf(img: np.ndarray) -> float:
 
 
 
+def length_vs_angle(auto: np.ndarray, cinf: float, angle: float) -> float:
+    raise NotImplementedError
