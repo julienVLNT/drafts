@@ -81,3 +81,21 @@ def field2pic(source: io.Pfile, name: str, timestep: int) -> tuple:
 
     # This interpolation is actually the picture.
     return (i2, j2)
+
+
+# =================================================================================================================== #
+
+def exp2pic(path: str) -> np.ndarray:
+
+    # Open the file
+    field = np.genfromtxt( path, delimiter=',', dtype=np.float64 )
+    field = np.nan_to_num(field, np.nanmean(field))
+    
+    # Padding up to a square
+    mean = np.nanmean(field)
+    l = min(field.shape)
+    L = max(field.shape)
+    var = np.ones((L,L), dtype=np.float64) *mean
+    var[:, (L-l)//2:(L+l)//2] = field
+
+    return var
