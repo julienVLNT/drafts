@@ -12,7 +12,7 @@ def autocorrelation(img: np.ndarray) -> np.ndarray:
 
 
 def cinf(img: np.ndarray) -> float:
-    cinf_ = (1 +(np.power(img.mean(), 2) /np.power(autocorrelation(img), 2).mean())) /2.
+    cinf_ = np.power(img.mean(), 2) /np.power(img, 2).mean()
     return cinf_
 
 
