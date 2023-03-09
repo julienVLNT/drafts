@@ -69,25 +69,37 @@ def radial_profile(img: np.ndarray, angle: float) -> tuple:
     auto = autocorrelation(img)
 
     N  = img.shape[0]
-    j_ = np.linspace(0, N-1, N).astype(np.int32)
+    j_ = np.linspace(0, N//2-1, N//2).astype(np.int32)
 
     if angle < 0 or angle > 2*np.pi: raise NotImplementedError
 
     if angle > np.pi: angle = angle - np.pi
 
-    i_ = np.round(j_ *np.tan(angle)).astype(np.int32)
-    
-    j_ = j_[i_ < N//2-1]
-    i_ = i_[i_ < N//2-1]
-    
-    r     = np.zeros_like(j_) *np.nan
-    img_r = np.zeros_like(j_) *np.nan
-    aut_r = np.zeros_like(j_) *np.nan
+    if angle < np.pi /2.:
+        i_ = np.round(j_ *np.tan(angle)).astype(np.int32)
 
-    for k, (i, j) in enumerate(zip(i_, j_)):
-        
-        r[k]     = np.sqrt( np.power(i, 2) + np.power(j, 2) )
-        img_r[k] = img[N//2-i, N//2+j]
-        aut_r[k] = auto[N//2-i, N//2+j]
+        j_ = j_[i_ < N//2]
+        i_ = i_[i_ < N//2]
 
-    return (r, img_r, aut_r)
+        r      = np.zeros_like(j_)
+        auto_r = np.zeros_like(j_)
+
+        for k, (i, j) in enumerate(zip(i_, j_)):
+            r[k]      = np.sqrt( np.power(j, 2) + np.power(i, 2) )
+            auto_r[k] = auto[N//2-i, N//2+j]
+
+    else:
+        angle = np.pi - angle
+        i_ = np.round(j_ *np.tan(angle)).astype(np.int32)
+
+        j_ = j_[i_ < N//2]
+        i_ = i_[i_ < N//2]
+
+        r      = np.zeros_like(j_)
+        auto_r = np.zeros_like(j_)
+
+        for k, (i, j) in enumerate(zip(i_, j_)):
+            r[k]      = np.sqrt( np.power(j, 2) + np.power(i, 2) )
+            auto_r[k] = auto[N//2-i, N//2-j]
+
+    return (r, auto_r)
