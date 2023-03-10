@@ -3,7 +3,7 @@ import matplotlib.tri as tri
 import numpy          as np
 import scipy          as sp
 
-# =================================================================================================================== #
+
 
 def field2pic(source: io.Pfile, name: str, timestep: int) -> tuple:
 
@@ -83,7 +83,61 @@ def field2pic(source: io.Pfile, name: str, timestep: int) -> tuple:
     return (i2, j2)
 
 
-# =================================================================================================================== #
+
+def peierls2pic(source: io.Pfile, timestep: int) -> np.ndarray:
+    
+    # Read the connectivity table of the faces
+    facet = source.read_faces()
+    
+    # Extract the ids of the first facet's vertices
+    id  = np.where(facet[:, 0]==1)[0]
+    id  = np.unique(facet[id, 1:4].flatten())
+    
+    # Read coordinates ('x', 'z')
+    coords = source.read_coords([timestep], ['x', 'z'])
+
+    # Extract the first facet's coordinates
+    coords = coords[0, :, id-1].transpose()
+
+    # Build the triangulation
+    mesh = tri.Triangulation(coords[0, :], coords[1, :])
+
+    # Read the data
+    field = source.read_fields([timestep], ['Peierls'])[0,...].transpose()
+
+    # Build the nodal representation of the field with the reversed topology
+    conn = source.read_elements()
+    vals = []
+    for _ in range(len(id)):
+        vals.append([])
+    reverse = dict(
+        zip(
+            id,
+            vals
+        )
+    )
+    for i, el in enumerate(conn[:, 1:]):
+        for p in el:
+            if p in id:
+                reverse[p].append(i)
+
+    field = np.asarray([field[reverse[i]].sum()/len(reverse[i]) for i in id], dtype=np.float64)
+
+    # Build discretisation for the two intervals
+    xlin = np.linspace(coords[0,:].min(), coords[0,:].max(), 1024, endpoint=True)
+    zlin = np.linspace(coords[1,:].min(), coords[1,:].max(), 1024, endpoint=True)
+    # Assemble the grid
+    xgrid, zgrid = np.meshgrid(xlin, zlin)
+
+    # Interpolate i2, j2 on the regular grid
+    field = sp.interpolate.griddata( np.swapaxes(coords[:,:], axis1=1, axis2=0), field[:], (xgrid, zgrid), method='cubic' )
+
+    # Fill the NaNs with mean value
+    peierls = np.nan_to_num(field, np.nanmean(field))
+
+    return peierls
+
+
 
 def exp2pic(path: str) -> np.ndarray:
 
