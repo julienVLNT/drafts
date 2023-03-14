@@ -182,14 +182,14 @@ def analyse_simulation(path: str) -> None:
 
         if tn > 0:
             # Iterate over tensor fields
-            for name in ['e', 'd', 's']:
+            for name in ['d', 'e', 's']:
 
                 # Preprocess the field
                 field = pre.field2pic(pfile, name, tn)[1]
                 N     = field.shape[0]
 
                 # Parameters of the figure
-                ncols = 5
+                ncols = 6
                 size  = 10
                 fig   = plt.figure(figsize=(ncols*size+1, 1*size))
 
@@ -245,6 +245,13 @@ def analyse_simulation(path: str) -> None:
                 axe.set_ylabel("$\\mathcal{A}(E_{yy})$")
                 axe.set_title("Radial for $\\theta = $"+"{:.3f}".format((angles[length.argmax()]+np.pi/2)/np.pi*180)+"°")
                 
+                fft_auto = np.abs(np.fft.fft2(auto))
+                axe = fig.add_subplot(1, ncols, 6)
+                axe.imshow(fft_auto)
+                axe.set_xlabel("freq. [Hz]")
+                axe.set_ylabel("freq. [Hz]")
+                axe.set_title("$|\mathcal{F}\left(\mathcal{A}(J2)\\right)|$")
+
                 plt.savefig(f"out/J2{name}_{tn}_analysis.jpg")
                 plt.close()
 
@@ -254,7 +261,7 @@ def analyse_simulation(path: str) -> None:
         N       = peierls.shape[0]
 
         # Parameters of the figure
-        ncols = 5
+        ncols = 6
         size  = 10
         fig   = plt.figure(figsize=(ncols*size+1, 1*size))
 
@@ -309,6 +316,14 @@ def analyse_simulation(path: str) -> None:
         axe.set_xlabel("Radius [px]")
         axe.set_ylabel("$\\mathcal{A}(E_{yy})$")
         axe.set_title("Radial for $\\theta = $"+"{:.3f}".format((angles[length.argmax()]+np.pi/2)/np.pi*180)+"°")
+
+        freq = np.abs(np.fft.fftshift(np.abs(np.fft.fft2(np.fliplr(peierls)))))
+        axe = fig.add_subplot(1, ncols, 6)
+        axe.imshow(freq)
+        axe.set_xlim()
+        axe.set_xlabel("freq. [Hz]")
+        axe.set_ylabel("freq. [Hz]")
+        axe.set_title("$|\mathcal{F}(Peierls)|$")
         
         plt.savefig(f"out/peierls_{tn}_analysis.jpg")
         plt.close()
